@@ -30,7 +30,7 @@ jobs:
       # Run goreleaser to build artifacts for release
       - name: Build with Goreleaser
         run: |
-          goreleaser release --skip-publish --clean  # Enlever --rm et ajouter --skip-publish pour éviter la publication automatique
+          goreleaser release --snapshot --skip-publish --clean  # Utilisation de --snapshot si aucun tag Git n'est présent
 
       # Build Docker image
       - name: Build Docker image
