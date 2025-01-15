@@ -1,0 +1,52 @@
+name: Release Workflow
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Déclenche le workflow pour les tags de version, par exemple 'v1.2.3'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'  # Utilisez la version Go que vous utilisez dans votre projet
+
+      # Install goreleaser
+      - name: Install Goreleaser
+        run: |
+          curl -sSL https://github.com/goreleaser/goreleaser/releases/download/v1.18.0/goreleaser_Linux_x86_64.tar.gz | tar xzv
+          sudo mv goreleaser /usr/local/bin/
+
+      # Run goreleaser to build artifacts for release
+      - name: Build with Goreleaser
+        run: |
+          goreleaser release --rm --skip-publish --clean
+
+      # Build Docker image
+      - name: Build Docker image
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}  # Extraire le tag de la release
+          docker build -t yourusername/yourrepository:$TAG .  # Utilisez votre nom d'utilisateur et le nom de votre repo
+          
+      # Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Push Docker image to Docker Hub
+      - name: Push Docker image to Docker Hub
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}  # Extraire le tag de la release
+          docker push yourusername/yourrepository:$TAG  # Utilisez votre nom d'utilisateur et le nom de votre repo
